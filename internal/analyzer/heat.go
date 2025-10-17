@@ -88,7 +88,7 @@ func (hc *HeatCalculator) calculateChangeFrequency(stats *models.FileChangeStats
 	return float64(stats.TotalChanges) / weeks
 }
 
-func (hc *HeatCalculator) IsLikelyDeadCode(stats *models.FileChangeStats, now time.Time) bool {
+func (hc *HeatCalculator) isLikelyDeadCode(stats *models.FileChangeStats, now time.Time) bool {
 	// Signal 1: No changes in 6+ months
 	sixMonthsAgo := now.AddDate(0, -6, 0)
 	noRecentChanges := stats.LastModified.Before(sixMonthsAgo)
@@ -102,6 +102,7 @@ func (hc *HeatCalculator) IsLikelyDeadCode(stats *models.FileChangeStats, now ti
 	// Dead code if 2 out of 3 signals present
 	signalCount := 0
 	if noRecentChanges {
+
 		signalCount++
 	}
 	if fewChanges {
