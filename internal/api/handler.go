@@ -98,21 +98,20 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	h.respondJSON(w, http.StatusOK, response)
 }
 
-// Helper: Generate deterministic repo ID
 func (h *Handler) generateRepoID(repoURL, branch string) string {
 	data := fmt.Sprintf("%s:%s", repoURL, branch)
 	hash := sha256.Sum256([]byte(data))
 	return fmt.Sprintf("%x", hash[:8]) // First 8 bytes = 16 hex chars
 }
 
-// Helper: Send JSON response
+//Send JSON response
 func (h *Handler) respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
 }
 
-// Helper: Send error response
+//Send error response
 func (h *Handler) respondError(w http.ResponseWriter, status int, message string) {
 	response := models.AnalyzeResponse{
 		Status: "error",
