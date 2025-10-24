@@ -23,7 +23,8 @@ func main() {
 	
 	gitAnalyzer := analyzer.NewGitAnalyzer(tempDir)
 	heatCalculator := analyzer.NewHeatCalculator()
-	handler := api.NewHandler(gitAnalyzer, heatCalculator)
+	treeBuilder := analyzer.NewTreeBuilder()
+	handler := api.NewHandler(gitAnalyzer, heatCalculator, treeBuilder)
 
 	router := api.SetupRoutes(handler)
 

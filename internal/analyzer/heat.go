@@ -55,6 +55,7 @@ func (hc *HeatCalculator) CalculateHeatScores(result *models.AnalysisResult) []m
 			Score:         normalizedScore,
 			ChangeFreq:    hc.calculateChangeFrequency(stats, daysSinceEdit),
 			DaysSinceEdit: daysSinceEdit,
+			TotalFileChanges: stats.TotalChanges,
 		})
 	}
 
