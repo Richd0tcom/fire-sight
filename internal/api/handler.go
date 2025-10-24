@@ -17,14 +17,16 @@ import (
 type Handler struct {
 	gitAnalyzer    *analyzer.GitAnalyzer
 	heatCalculator *analyzer.HeatCalculator
+	treeBuilder    *analyzer.TreeBuilder
 	timeout        time.Duration
 }
 
-func NewHandler(gitAnalyzer *analyzer.GitAnalyzer, heatCalculator *analyzer.HeatCalculator) *Handler {
+func NewHandler(gitAnalyzer *analyzer.GitAnalyzer, heatCalculator *analyzer.HeatCalculator, treeBuilder *analyzer.TreeBuilder) *Handler {
 	return &Handler{
 		gitAnalyzer:    gitAnalyzer,
 		heatCalculator: heatCalculator,
-		timeout:        5 * time.Minute, // Max time for repo analysis
+		treeBuilder:    treeBuilder,
+		timeout:        5 * time.Minute,
 	}
 }
 
@@ -58,7 +60,6 @@ func (h *Handler) AnalyzeRepo(w http.ResponseWriter, r *http.Request) {
 	// Start timer for performance tracking
 	startTime := time.Now()
 
-	// STEP 1: Analyze git history
 	opts := models.AnalyzeOptions{
 		Branch:        req.Branch,
 		TimeRangeDays: req.TimeRangeDays,
@@ -71,17 +72,19 @@ func (h *Handler) AnalyzeRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// STEP 2: Calculate heat scores
+	
 	heatScores := h.heatCalculator.CalculateHeatScores(result)
+	fileTree:= h.treeBuilder.BuildTree(heatScores, result.FileStats)
 
-	// Generate repo ID (for future caching)
+
 	repoID := h.generateRepoID(req.RepoURL, req.Branch)
 
-	// Build response
+
 	response := models.AnalyzeResponse{
 		RepoID:    repoID,
 		Status:    "complete",
 		FileStats: heatScores,
+		FileTree: fileTree,
 		Analyzed:  len(heatScores),
 		Duration:  time.Since(startTime).String(),
 	}
