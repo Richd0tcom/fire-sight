@@ -27,6 +27,20 @@ type FileChangeStats struct {
 	FirstSeen     time.Time
 }
 
+type FunctionStats struct {
+	Name         string
+	LineStart    int
+	LineEnd      int
+	TotalChanges int
+	LastModified time.Time
+	ChangesByDay map[int]int // days ago -> change count
+}
+
+type FileAnalysis struct {
+	Path      string
+	Language  string
+	Functions []*FunctionStats
+}
 
 
 type AnalysisResult struct {
