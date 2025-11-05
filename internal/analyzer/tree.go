@@ -13,6 +13,7 @@ import (
 type TreeBuilder struct {
 	// Maps path -> node for O(1) lookups during construction
 	nodeCache map[string]*models.FileNode
+	hc *HeatCalculator
 }
 
 func NewTreeBuilder() *TreeBuilder {
@@ -21,7 +22,12 @@ func NewTreeBuilder() *TreeBuilder {
 	}
 }
 
-func (tb *TreeBuilder) BuildTree(heatScores []models.HeatScore, fileStats map[string]*models.FileChangeStats) *models.FileNode {
+func (tb *TreeBuilder) BuildTree(analysisResult *models.AnalysisResult) *models.FileNode {
+
+	heatScores:= tb.hc.CalculateHeatScores(analysisResult)
+	fileStats:= analysisResult.FileStats
+	fileFxnAnlysis:= analysisResult.FileFunctionAnalyses
+	
 	// Create virtual root node
 	root := &models.FileNode{
 		ID:       "root",
@@ -34,7 +40,7 @@ func (tb *TreeBuilder) BuildTree(heatScores []models.HeatScore, fileStats map[st
 
 	// Process each file
 	for _, score := range heatScores {
-		tb.addFileToTree(root, score, fileStats[score.Path])
+		tb.addFileToTree(root, score, fileStats[score.Path], fileFxnAnlysis[score.Path])
 	}
 
 	// Calculate aggregated stats for folders (bottom-up)
@@ -44,7 +50,12 @@ func (tb *TreeBuilder) BuildTree(heatScores []models.HeatScore, fileStats map[st
 }
 
 // addFileToTree inserts a file into the tree, creating parent folders as needed
-func (tb *TreeBuilder) addFileToTree(root *models.FileNode, score models.HeatScore, stats *models.FileChangeStats) {
+func (tb *TreeBuilder) addFileToTree(
+	root *models.FileNode, 
+	score models.HeatScore, 
+	stats *models.FileChangeStats,
+	anlysis *models.FileAnalysis,
+	) {
 	// Split path into parts: "src/components/Button.tsx" -> ["src", "components", "Button.tsx"]
 	parts := strings.Split(score.Path, "/")
 	
@@ -87,7 +98,11 @@ func (tb *TreeBuilder) addFileToTree(root *models.FileNode, score models.HeatSco
 				node.LastModified = stats.LastModified
 		
 				node.HeatScore = &score
-				node.Functions = []*models.FunctionNode{} // Populated in Milestone 2
+				if anlysis != nil && len(anlysis.Functions) > 0 {
+					node.Functions = tb.hc.CalculateFunctionHeatScore(anlysis.Functions)
+				} else {
+					node.Functions = []*models.FunctionNode{}
+				}
 			}
 
 			// Add to parent's children

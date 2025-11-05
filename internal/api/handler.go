@@ -72,10 +72,7 @@ func (h *Handler) AnalyzeRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
-	heatScores := h.heatCalculator.CalculateHeatScores(result)
-
-	fileTree:= h.treeBuilder.BuildTree(heatScores, result.FileStats)
+	fileTree:= h.treeBuilder.BuildTree(result)
 
 
 	repoID := h.generateRepoID(req.RepoURL, req.Branch)
@@ -84,9 +81,7 @@ func (h *Handler) AnalyzeRepo(w http.ResponseWriter, r *http.Request) {
 	response := models.AnalyzeResponse{
 		RepoID:    repoID,
 		Status:    "complete",
-		FileStats: heatScores,
 		FileTree: fileTree,
-		Analyzed:  len(heatScores),
 		Duration:  time.Since(startTime).String(),
 	}
 
