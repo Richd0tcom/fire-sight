@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -61,6 +62,29 @@ func (ga *GitAnalyzer) AnalyzeRepository(ctx context.Context, repoPath string, o
 
 	if err != nil {
 		return nil, fmt.Errorf("parse history failed: %w", err)
+	}
+
+
+	result.FileFunctionAnalyses = make(map[string]*models.FileAnalysis)
+	cutoffDate := time.Now().AddDate(0, 0, -opts.TimeRangeDays)
+
+	fileAnalyzer := NewFileAnalyzer(repoPath)
+
+	
+
+	for filePath := range result.FileStats {
+		// Skip non-source files (docs, configs, etc.)
+		if !isSourceFile(filePath) {
+			continue
+		}
+
+		analysis, err := fileAnalyzer.AnalyzeFile(ctx, repo, filePath, cutoffDate)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		
+		result.FileFunctionAnalyses[filePath] = analysis
 	}
 
 	return result, nil
@@ -158,4 +182,21 @@ func (ga *GitAnalyzer) parseGitHistory(ctx context.Context, repo *git.Repository
 		FileStats:    fileStats,
 		TimeRangeDays: opts.TimeRangeDays,
 	}, nil
+}
+
+func isSourceFile(path string) bool {
+	// Skip common non-source files
+	excludePatterns := []string{
+		".md", ".txt", ".json", ".yaml", ".yml",
+		".xml", ".html", ".css", ".svg", ".png",
+		".jpg", ".gif", ".pdf", ".lock", ".sum",
+	}
+	
+	for _, pattern := range excludePatterns {
+		if strings.HasSuffix(strings.ToLower(path), pattern) {
+			return false
+		}
+	}
+	
+	return true
 }

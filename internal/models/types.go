@@ -27,6 +27,20 @@ type FileChangeStats struct {
 	FirstSeen     time.Time
 }
 
+type FunctionStats struct {
+	Name         string
+	LineStart    int
+	LineEnd      int
+	TotalChanges int
+	LastModified time.Time
+	ChangesByDay map[int]int // days ago -> change count
+}
+
+type FileAnalysis struct {
+	Path      string
+	Language  string
+	Functions []*FunctionStats
+}
 
 
 type AnalysisResult struct {
@@ -38,6 +52,7 @@ type AnalysisResult struct {
 
 	//this is likely a map of path -> stats
 	FileStats map[string]*FileChangeStats `json:"file_stats"`
+	FileFunctionAnalyses  map[string]*FileAnalysis `json:"file_function_analyses"`
 
 	Status        string `json:"status"`
 	TimeRangeDays int    `json:"time_range_days"`
