@@ -52,6 +52,7 @@ type AnalysisResult struct {
 
 	//this is likely a map of path -> stats
 	FileStats map[string]*FileChangeStats `json:"file_stats"`
+	FileFunctionAnalyses  map[string]*FileAnalysis `json:"file_function_analyses"`
 
 	Status        string `json:"status"`
 	TimeRangeDays int    `json:"time_range_days"`

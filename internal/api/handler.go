@@ -74,6 +74,7 @@ func (h *Handler) AnalyzeRepo(w http.ResponseWriter, r *http.Request) {
 
 	
 	heatScores := h.heatCalculator.CalculateHeatScores(result)
+
 	fileTree:= h.treeBuilder.BuildTree(heatScores, result.FileStats)
 
 

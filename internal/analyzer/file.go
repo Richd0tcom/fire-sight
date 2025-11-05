@@ -38,7 +38,6 @@ func (fa *FileAnalyzer) AnalyzeFile(
 	ctx context.Context,
 	repo *git.Repository,
 	filePath string,
-	fileStats *models.FileChangeStats,
 	cutoffDate time.Time,
 ) (*models.FileAnalysis, error) {
 	// Read file content
