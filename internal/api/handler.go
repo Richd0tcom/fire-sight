@@ -16,15 +16,13 @@ import (
 
 type Handler struct {
 	gitAnalyzer    *analyzer.GitAnalyzer
-	heatCalculator *analyzer.HeatCalculator
 	treeBuilder    *analyzer.TreeBuilder
 	timeout        time.Duration
 }
 
-func NewHandler(gitAnalyzer *analyzer.GitAnalyzer, heatCalculator *analyzer.HeatCalculator, treeBuilder *analyzer.TreeBuilder) *Handler {
+func NewHandler(gitAnalyzer *analyzer.GitAnalyzer, treeBuilder *analyzer.TreeBuilder) *Handler {
 	return &Handler{
 		gitAnalyzer:    gitAnalyzer,
-		heatCalculator: heatCalculator,
 		treeBuilder:    treeBuilder,
 		timeout:        5 * time.Minute,
 	}

@@ -16,9 +16,10 @@ type TreeBuilder struct {
 	hc *HeatCalculator
 }
 
-func NewTreeBuilder() *TreeBuilder {
+func NewTreeBuilder(hc *HeatCalculator) *TreeBuilder {
 	return &TreeBuilder{
 		nodeCache: make(map[string]*models.FileNode),
+		hc: hc,
 	}
 }
 
