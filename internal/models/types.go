@@ -44,26 +44,26 @@ type FileAnalysis struct {
 
 
 type AnalysisResult struct {
-	RepoID      string    `json:"repo_id"`
-	RepoURL     string    `json:"repo_url"`
+	RepoID      string    `json:"repoId"`
+	RepoURL     string    `json:"repoUrl"`
 	Branch      string    `json:"branch"`
-	AnalyzedAt  time.Time `json:"analyzed_at"`
-	CommitCount int       `json:"commit_count"`
+	AnalyzedAt  time.Time `json:"analyzedAt"`
+	CommitCount int       `json:"commitCount"`
 
 	//this is likely a map of path -> stats
-	FileStats map[string]*FileChangeStats `json:"file_stats"`
-	FileFunctionAnalyses  map[string]*FileAnalysis `json:"file_function_analyses"`
+	FileStats map[string]*FileChangeStats `json:"fileStats"`
+	FileFunctionAnalyses  map[string]*FileAnalysis `json:"fileFunctionAnalyses"`
 
 	Status        string `json:"status"`
-	TimeRangeDays int    `json:"time_range_days"`
+	TimeRangeDays int    `json:"timeRangeDays"`
 }
 
 type HeatScore struct {
 	Path          string        `json:"path"`
 	Score         float64       `json:"score"` // 0-100
-	ChangeFreq    float64       `json:"change_freq"` //TODO: compare with int
-	DaysSinceEdit int           `json:"days_since_edit"`
-	TotalFileChanges int `json:"total_file_changes"`
+	ChangeFreq    float64       `json:"changeFreq"` //TODO: compare with int
+	DaysSinceEdit int           `json:"daysSinceEdit"`
+	TotalFileChanges int `json:"totalFileChanges"`
 }
 
 
@@ -75,22 +75,22 @@ type FileNode struct {
 	Type            FileNodeType    `json:"type"` // "file" | "folder"
 	Extension       string          `json:"extension,omitempty"`
 	Size            int64           `json:"size"`
-	LinesOfCode     int             `json:"lines_of_code"`
-	LastModified    time.Time       `json:"last_modified"`
-	HeatScore       *HeatScore      `json:"heat_score"`
+	LinesOfCode     int             `json:"linesOfCode"`
+	LastModified    time.Time       `json:"lastModified"`
+	HeatScore       *HeatScore      `json:"heatScore"`
 	Functions       []*FunctionNode `json:"functions,omitempty"`
 	Children        []*FileNode     `json:"children,omitempty"`
-	FileCount       int             `json:"file_count,omitempty"` // For folders: total files inside
+	FileCount       int             `json:"fileCount,omitempty"` // For folders: total files inside
 }
 
 // FunctionNode represents a function/method within a file (Milestone 2)
 type FunctionNode struct {
 	Name            string    `json:"name"`
-	LineStart       int       `json:"line_start"`
-	LineEnd         int       `json:"line_end"`
-	LastModified    time.Time `json:"last_modified"`
-	HeatScore       *HeatScore   `json:"heat_score"`
-	IsDeadCode      bool      `json:"is_dead_code"`
+	LineStart       int       `json:"lineStart"`
+	LineEnd         int       `json:"lineEnd"`
+	LastModified    time.Time `json:"lastModified"`
+	HeatScore       *HeatScore   `json:"heatScore"`
+	IsDeadCode      bool      `json:"isDeadCode"`
 }
 
 type Changes struct {
@@ -99,18 +99,18 @@ type Changes struct {
 
 // API Request/Response types
 type AnalyzeRequest struct {
-	RepoURL       string `json:"repo_url"`
+	RepoURL       string `json:"repoUrl"`
 	Branch        string `json:"branch"`               // default: "main"
-	TimeRangeDays int    `json:"time_range_days"`      // default: 180
-	AuthToken     string `json:"auth_token,omitempty"` // for private repos
+	TimeRangeDays int    `json:"timeRangeDays"`      // default: 180
+	AuthToken     string `json:"authToken,omitempty"` // for private repos
 }
 
 type AnalyzeResponse struct {
-	RepoID    string      `json:"repo_id"`
+	RepoID    string      `json:"repoId"`
 	Status    string      `json:"status"` // "complete" | "error"
-	FileStats []HeatScore `json:"file_stats"`
-	FileTree  *FileNode   `json:"file_tree,omitempty"` // NEW: Hierarchical tree
-	Analyzed  int         `json:"analyzed_files"`
+	FileStats []HeatScore `json:"fileStats"`
+	FileTree  *FileNode   `json:"fileTree,omitempty"` // NEW: Hierarchical tree
+	Analyzed  int         `json:"analyzedFiles"`
 	Error     string      `json:"error,omitempty"`
 	Duration  string      `json:"duration"`
 }

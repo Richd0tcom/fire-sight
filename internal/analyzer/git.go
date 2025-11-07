@@ -3,6 +3,7 @@ package analyzer
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 	"time"
@@ -49,20 +50,42 @@ func (ga *GitAnalyzer) cloneRepo(ctx context.Context, repoURL string, opts model
 	return repo, repoPath, nil
 }
 
-func (ga *GitAnalyzer) AnalyzeRepository(ctx context.Context, repoPath string, opts models.AnalyzeOptions) (*models.AnalysisResult, error) {
+func (ga *GitAnalyzer) AnalyzeRepository(ctx context.Context, repoUrl string, opts models.AnalyzeOptions) (*models.AnalysisResult, error) {
 
-	repo, _, err := ga.cloneRepo(ctx, repoPath, opts)
+	repo, repoPath, err := ga.cloneRepo(ctx, repoUrl, opts)
 	if err != nil {
 		return nil, fmt.Errorf("clone failed: %w", err)
 	}
 
 	defer os.RemoveAll(repoPath) 
+
+	fStats := make(map[string]bool)
+
+	err = fs.WalkDir(os.DirFS(repoPath), ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// Skip VCS metadata
+		if path == ".git" || strings.HasPrefix(path, ".git/") {
+			return fs.SkipDir
+		}
 	
-	result, err := ga.parseGitHistory(ctx, repo, repoPath, opts)
+		if d.Type().IsRegular() {
+			fStats[path] = true
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("walk repo tree failed: %w", err)
+	}
+
+	result, err := ga.parseGitHistory(ctx, repo, repoPath, opts, fStats)
 
 	if err != nil {
 		return nil, fmt.Errorf("parse history failed: %w", err)
 	}
+
+
 
 
 	result.FileFunctionAnalyses = make(map[string]*models.FileAnalysis)
@@ -90,7 +113,7 @@ func (ga *GitAnalyzer) AnalyzeRepository(ctx context.Context, repoPath string, o
 	return result, nil
 }
 
-func (ga *GitAnalyzer) parseGitHistory(ctx context.Context, repo *git.Repository, repoURL string, opts models.AnalyzeOptions) (*models.AnalysisResult, error) {
+func (ga *GitAnalyzer) parseGitHistory(ctx context.Context, repo *git.Repository, repoURL string, opts models.AnalyzeOptions, baseTreeStats map[string]bool) (*models.AnalysisResult, error) {
 	branch := opts.Branch
 	if branch == "" {
 		branch = "main"
@@ -143,6 +166,9 @@ func (ga *GitAnalyzer) parseGitHistory(ctx context.Context, repo *git.Repository
 
 
 			if _, exists := fileStats[path]; !exists {
+				if strings.Contains(path, "=>") {
+					path = strings.TrimSpace(strings.Split(path, "=>")[1])
+				}	
 				fileStats[path] = &models.FileChangeStats{
 					FilePath:          path,
 					ChangesByDay:      make(map[int]int),
@@ -172,6 +198,17 @@ func (ga *GitAnalyzer) parseGitHistory(ctx context.Context, repo *git.Repository
 
 	if err != nil {
 		return nil, fmt.Errorf("iterate commits failed: %w", err)
+	}
+	println("Commits processed: ", commitCount)
+	println("Files processed: ", len(fileStats))
+	println("file stats", fileStats)
+
+	//filter stats to current tree
+	for filePath := range fileStats {
+		if _, exists := baseTreeStats[filePath]; !exists {
+			println("Deleting file: ", filePath)
+			delete(fileStats, filePath)
+		}
 	}
 
 	return &models.AnalysisResult{
