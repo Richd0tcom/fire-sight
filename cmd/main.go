@@ -7,14 +7,15 @@ import (
 
 	"github.com/richd0tcom/fire-sight/internal/analyzer"
 	"github.com/richd0tcom/fire-sight/internal/api"
+	"github.com/richd0tcom/fire-sight/pkg"
 )
 
 
 
 func main() {
 
-	port := getEnv("PORT", "8080")
-	tempDir := getEnv("TEMP_DIR", "./tmp/dead-code-heatmap")
+	port := pkg.GetEnv("PORT", "8090")
+	tempDir := pkg.GetEnv("TEMP_DIR", "./tmp/dead-code-heatmap")
 
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		log.Fatalf("Failed to create temp directory: %v", err)
@@ -37,9 +38,3 @@ func main() {
 	}
 }
 
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
-}
